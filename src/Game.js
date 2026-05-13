@@ -1,3 +1,5 @@
+import { Map } from "./Map.js";
+
 export class Game {
     constructor(canvas) {
         this.canvas = canvas;
@@ -7,6 +9,7 @@ export class Game {
         this.canvas.width = this.width;
         this.canvas.height = this.height;
         this.isRunning = false;
+        this.map = new Map(this.ctx);
     }
 
     start() {
@@ -16,26 +19,17 @@ export class Game {
 
     loop() {
         if (!this.isRunning) return;
-
         this.update();
         this.draw();
-
         requestAnimationFrame(() => this.loop());
     }
 
     update() {
-        // сюда добавим логику позже
+        // логика позже
     }
 
     draw() {
-        // очищаем экран
-        this.ctx.fillStyle = "#0f3460";
-        this.ctx.fillRect(0, 0, this.width, this.height);
-
-        // временный текст чтобы убедиться что всё работает
-        this.ctx.fillStyle = "#ffffff";
-        this.ctx.font = "32px Arial";
-        this.ctx.textAlign = "center";
-        this.ctx.fillText("Tower Defense", this.width / 2, this.height / 2);
+        this.ctx.clearRect(0, 0, this.width, this.height);
+        this.map.draw();
     }
 }
