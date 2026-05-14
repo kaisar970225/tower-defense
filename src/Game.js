@@ -1,4 +1,5 @@
 import { Map } from "./Map.js";
+import { Enemy } from "./Enemy.js";
 
 export class Game {
     constructor(canvas) {
@@ -10,6 +11,9 @@ export class Game {
         this.canvas.height = this.height;
         this.isRunning = false;
         this.map = new Map(this.ctx);
+        this.enemies = [];
+        this.spawnTimer = 0;
+        this.spawnInterval = 120; // каждые 120 кадров новый враг
     }
 
     start() {
@@ -25,11 +29,23 @@ export class Game {
     }
 
     update() {
-        // логика позже
+        // спавним врагов
+        this.spawnTimer++;
+        if (this.spawnTimer >= this.spawnInterval) {
+            this.enemies.push(new Enemy(this.map.path, this.map.cellSize));
+            this.spawnTimer = 0;
+        }
+
+        // обновляем врагов
+        this.enemies.forEach((enemy) => enemy.update());
+
+        // удаляем тех кто дошёл до конца
+        this.enemies = this.enemies.filter((enemy) => !enemy.reachedEnd);
     }
 
     draw() {
         this.ctx.clearRect(0, 0, this.width, this.height);
         this.map.draw();
+        this.enemies.forEach((enemy) => enemy.draw(this.ctx));
     }
 }
