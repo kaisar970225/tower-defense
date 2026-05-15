@@ -1,5 +1,6 @@
 import { Map } from "./Map.js";
 import { Enemy } from "./Enemy.js";
+import { Tower } from "./Tower.js";
 
 export class Game {
     constructor(canvas) {
@@ -12,6 +13,7 @@ export class Game {
         this.isRunning = false;
         this.map = new Map(this.ctx);
         this.enemies = [];
+        this.towers = [];
 
         // волны
         this.wave = 1;
@@ -21,7 +23,33 @@ export class Game {
         this.spawnInterval = 90;
         this.waveInProgress = true;
         this.betweenWaveTimer = 0;
-        this.betweenWaveDelay = 180; // пауза между волнами (3 сек)
+        this.betweenWaveDelay = 180;
+
+        // клик для размещения башни
+        this.canvas.addEventListener("click", (e) => this.handleClick(e));
+    }
+
+    handleClick(e) {
+        const rect = this.canvas.getBoundingClientRect();
+        const x = e.clientX - rect.left;
+        const y = e.clientY - rect.top;
+
+        const col = Math.floor(x / this.map.cellSize);
+        const row = Math.floor(y / this.map.cellSize);
+
+        // нельзя ставить на путь
+        const isPath = this.map.path.some(
+            ([pc, pr]) => pc === col && pr === row,
+        );
+        if (isPath) return;
+
+        // нельзя ставить две башни на одно место
+        const occupied = this.towers.some(
+            (t) => t.col === col && t.row === row,
+        );
+        if (occupied) return;
+
+        this.towers.push(new Tower(col, row, this.map.cellSize));
     }
 
     start() {
@@ -38,7 +66,6 @@ export class Game {
 
     update() {
         if (this.waveInProgress) {
-            // спавним врагов волны
             if (this.enemiesSpawned < this.enemiesPerWave) {
                 this.spawnTimer++;
                 if (this.spawnTimer >= this.spawnInterval) {
@@ -50,7 +77,6 @@ export class Game {
                 }
             }
 
-            // волна закончилась когда все заспавнены и все дошли до конца
             const allSpawned = this.enemiesSpawned >= this.enemiesPerWave;
             const allGone = this.enemies.length === 0;
             if (allSpawned && allGone) {
@@ -58,33 +84,33 @@ export class Game {
                 this.betweenWaveTimer = 0;
             }
         } else {
-            // пауза между волнами
             this.betweenWaveTimer++;
             if (this.betweenWaveTimer >= this.betweenWaveDelay) {
                 this.wave++;
-                this.enemiesPerWave += 3; // каждая волна сложнее
+                this.enemiesPerWave += 3;
                 this.enemiesSpawned = 0;
                 this.waveInProgress = true;
             }
         }
 
-        // обновляем врагов
+        this.towers.forEach((tower) => tower.update(this.enemies));
         this.enemies.forEach((enemy) => enemy.update());
-        this.enemies = this.enemies.filter((enemy) => !enemy.reachedEnd);
+        this.enemies = this.enemies.filter(
+            (enemy) => !enemy.reachedEnd && !enemy.isDead,
+        );
     }
 
     draw() {
         this.ctx.clearRect(0, 0, this.width, this.height);
         this.map.draw();
+        this.towers.forEach((tower) => tower.draw(this.ctx));
         this.enemies.forEach((enemy) => enemy.draw(this.ctx));
 
-        // надпись волны
         this.ctx.fillStyle = "#ffffff";
         this.ctx.font = "20px Arial";
         this.ctx.textAlign = "left";
         this.ctx.fillText(`Wave: ${this.wave}`, 10, 25);
 
-        // надпись между волнами
         if (!this.waveInProgress) {
             this.ctx.fillStyle = "#f1c40f";
             this.ctx.font = "28px Arial";
