@@ -19,7 +19,14 @@ export class Game {
         this.lives = 20;
         this.money = 100;
         this.score = 0;
-        this.towerCost = 25;
+
+        // выбранный тип башни
+        this.selectedTower = "basic";
+        this.towerCosts = {
+            basic: 25,
+            sniper: 50,
+            rapid: 35,
+        };
 
         // волны
         this.wave = 1;
@@ -39,8 +46,16 @@ export class Game {
         const x = e.clientX - rect.left;
         const y = e.clientY - rect.top;
 
+        // кнопки выбора башни (внизу экрана)
+        if (y > this.height - 50) {
+            if (x < 150) this.selectedTower = "basic";
+            else if (x < 300) this.selectedTower = "sniper";
+            else if (x < 450) this.selectedTower = "rapid";
+            return;
+        }
+
         const col = Math.floor(x / this.map.cellSize);
-        const row = Math.floor(y / this.map.cellSize);
+        const row = Math.floor((y - this.map.offsetY) / this.map.cellSize);
 
         const isPath = this.map.path.some(
             ([pc, pr]) => pc === col && pr === row,
@@ -52,11 +67,13 @@ export class Game {
         );
         if (occupied) return;
 
-        // проверяем хватает ли денег
-        if (this.money < this.towerCost) return;
+        const cost = this.towerCosts[this.selectedTower];
+        if (this.money < cost) return;
 
-        this.money -= this.towerCost;
-        this.towers.push(new Tower(col, row, this.map.cellSize));
+        this.money -= cost;
+        this.towers.push(
+            new Tower(col, row, this.map.cellSize, this.selectedTower),
+        );
     }
 
     start() {
@@ -108,7 +125,6 @@ export class Game {
         this.towers.forEach((tower) => tower.update(this.enemies));
         this.enemies.forEach((enemy) => enemy.update());
 
-        // собираем награды за убитых врагов
         this.enemies.forEach((enemy) => {
             if (enemy.isDead) {
                 this.money += enemy.reward;
@@ -123,34 +139,48 @@ export class Game {
     }
 
     drawUI() {
-        // фон UI панели
+        // верхняя панель
         this.ctx.fillStyle = "#16213e";
         this.ctx.fillRect(0, 0, this.width, 40);
 
         this.ctx.font = "18px Arial";
         this.ctx.textAlign = "left";
 
-        // жизни
         this.ctx.fillStyle = "#e74c3c";
         this.ctx.fillText(`❤️ ${this.lives}`, 10, 27);
 
-        // деньги
         this.ctx.fillStyle = "#f1c40f";
         this.ctx.fillText(`💰 ${this.money}`, 100, 27);
 
-        // очки
         this.ctx.fillStyle = "#2ecc71";
         this.ctx.fillText(`⭐ ${this.score}`, 210, 27);
 
-        // волна
         this.ctx.fillStyle = "#ffffff";
         this.ctx.fillText(`🌊 Wave: ${this.wave}`, 320, 27);
 
-        // стоимость башни
-        this.ctx.fillStyle =
-            this.money >= this.towerCost ? "#ffffff" : "#e74c3c";
-        this.ctx.textAlign = "right";
-        this.ctx.fillText(`Tower: ${this.towerCost}💰`, this.width - 10, 27);
+        // нижняя панель — выбор башни
+        this.ctx.fillStyle = "#16213e";
+        this.ctx.fillRect(0, this.height - 50, this.width, 50);
+
+        const towers = [
+            { type: "basic", label: "🟢 Basic 25💰", x: 0 },
+            { type: "sniper", label: "🔵 Sniper 50💰", x: 150 },
+            { type: "rapid", label: "🔴 Rapid 35💰", x: 300 },
+        ];
+
+        towers.forEach(({ type, label, x }) => {
+            // подсветка выбранной башни
+            if (this.selectedTower === type) {
+                this.ctx.fillStyle = "#ffffff22";
+                this.ctx.fillRect(x, this.height - 50, 150, 50);
+            }
+
+            this.ctx.fillStyle =
+                this.money >= this.towerCosts[type] ? "#ffffff" : "#e74c3c";
+            this.ctx.font = "14px Arial";
+            this.ctx.textAlign = "center";
+            this.ctx.fillText(label, x + 75, this.height - 20);
+        });
     }
 
     draw() {
