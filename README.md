@@ -39,3 +39,16 @@ A browser-based Tower Defense game built with vanilla JavaScript and Canvas API.
 4. Open `http://localhost:5500`
 
 ## 📁 Project Structure
+tower-defense/
+ - ├── index.html
+ - ├── style.css
+ - └── src/
+ - ├── main.js      # Entry point
+ - ├── Game.js      # Game loop and state
+ - ├── Map.js       # Grid and enemy path
+ - ├── Enemy.js     # Enemy logic
+ - ├── Tower.js     # Tower logic
+ - └── Bullet.js    # Bullet logic
+## 👨‍💻 Author
+
+**kaisar970225** — [GitHub](https://github.com/kaisar970225)
