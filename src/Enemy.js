@@ -2,6 +2,7 @@ export class Enemy {
     constructor(path, cellSize) {
         this.path = path;
         this.cellSize = cellSize;
+        this.offsetY = 40;
         this.pathIndex = 0;
         this.speed = 2;
         this.hp = 100;
@@ -9,11 +10,11 @@ export class Enemy {
         this.size = 20;
         this.isDead = false;
         this.reachedEnd = false;
+        this.reward = 10;
 
-        // стартовая позиция — первая клетка пути
         const [startCol, startRow] = this.path[0];
         this.x = startCol * this.cellSize + this.cellSize / 2;
-        this.y = startRow * this.cellSize + this.cellSize / 2;
+        this.y = startRow * this.cellSize + this.cellSize / 2 + this.offsetY;
     }
 
     update() {
@@ -22,10 +23,10 @@ export class Enemy {
             return;
         }
 
-        // цель — следующая клетка пути
         const [targetCol, targetRow] = this.path[this.pathIndex + 1];
         const targetX = targetCol * this.cellSize + this.cellSize / 2;
-        const targetY = targetRow * this.cellSize + this.cellSize / 2;
+        const targetY =
+            targetRow * this.cellSize + this.cellSize / 2 + this.offsetY;
 
         const dx = targetX - this.x;
         const dy = targetY - this.y;
@@ -42,13 +43,11 @@ export class Enemy {
     }
 
     draw(ctx) {
-        // тело врага
         ctx.fillStyle = "#e74c3c";
         ctx.beginPath();
         ctx.arc(this.x, this.y, this.size, 0, Math.PI * 2);
         ctx.fill();
 
-        // полоска HP
         const barWidth = this.size * 2;
         const barHeight = 5;
         const barX = this.x - this.size;

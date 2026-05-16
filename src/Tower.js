@@ -5,8 +5,9 @@ export class Tower {
         this.col = col;
         this.row = row;
         this.cellSize = cellSize;
+        this.offsetY = 40;
         this.x = col * cellSize + cellSize / 2;
-        this.y = row * cellSize + cellSize / 2;
+        this.y = row * cellSize + cellSize / 2 + this.offsetY;
         this.range = 100;
         this.damage = 20;
         this.fireRate = 60;
@@ -16,7 +17,6 @@ export class Tower {
     }
 
     update(enemies) {
-        // ищем цель
         this.target = null;
         let minDist = this.range;
 
@@ -30,7 +30,6 @@ export class Tower {
             }
         });
 
-        // стреляем — создаём снаряд
         if (this.target) {
             this.fireTimer++;
             if (this.fireTimer >= this.fireRate) {
@@ -41,34 +40,29 @@ export class Tower {
             }
         }
 
-        // обновляем снаряды
         this.bullets.forEach((bullet) => bullet.update());
         this.bullets = this.bullets.filter((bullet) => !bullet.isDone);
     }
 
     draw(ctx) {
-        // основание башни
         ctx.fillStyle = "#2c3e50";
         ctx.fillRect(
             this.col * this.cellSize + 8,
-            this.row * this.cellSize + 8,
+            this.row * this.cellSize + 8 + this.offsetY,
             this.cellSize - 16,
             this.cellSize - 16,
         );
 
-        // пушка
         ctx.fillStyle = "#7f8c8d";
         ctx.beginPath();
         ctx.arc(this.x, this.y, 10, 0, Math.PI * 2);
         ctx.fill();
 
-        // радиус
         ctx.strokeStyle = "#ffffff33";
         ctx.beginPath();
         ctx.arc(this.x, this.y, this.range, 0, Math.PI * 2);
         ctx.stroke();
 
-        // снаряды
         this.bullets.forEach((bullet) => bullet.draw(ctx));
     }
 }

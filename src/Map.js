@@ -3,9 +3,9 @@ export class Map {
         this.ctx = ctx;
         this.cellSize = 50;
         this.cols = 16;
-        this.rows = 12;
+        this.rows = 11;
+        this.offsetY = 40; // отступ для UI панели
 
-        // путь врагов - массив координат [col, row]
         this.path = [
             [0, 1],
             [1, 1],
@@ -57,16 +57,15 @@ export class Map {
                 this.ctx.fillStyle = isPath ? "#c8a96e" : "#4a7c59";
                 this.ctx.fillRect(
                     col * this.cellSize,
-                    row * this.cellSize,
+                    row * this.cellSize + this.offsetY,
                     this.cellSize,
                     this.cellSize,
                 );
 
-                // сетка
                 this.ctx.strokeStyle = "#00000033";
                 this.ctx.strokeRect(
                     col * this.cellSize,
-                    row * this.cellSize,
+                    row * this.cellSize + this.offsetY,
                     this.cellSize,
                     this.cellSize,
                 );

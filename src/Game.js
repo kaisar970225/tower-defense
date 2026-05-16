@@ -15,6 +15,12 @@ export class Game {
         this.enemies = [];
         this.towers = [];
 
+        // UI
+        this.lives = 20;
+        this.money = 100;
+        this.score = 0;
+        this.towerCost = 25;
+
         // волны
         this.wave = 1;
         this.enemiesPerWave = 5;
@@ -25,7 +31,6 @@ export class Game {
         this.betweenWaveTimer = 0;
         this.betweenWaveDelay = 180;
 
-        // клик для размещения башни
         this.canvas.addEventListener("click", (e) => this.handleClick(e));
     }
 
@@ -37,18 +42,20 @@ export class Game {
         const col = Math.floor(x / this.map.cellSize);
         const row = Math.floor(y / this.map.cellSize);
 
-        // нельзя ставить на путь
         const isPath = this.map.path.some(
             ([pc, pr]) => pc === col && pr === row,
         );
         if (isPath) return;
 
-        // нельзя ставить две башни на одно место
         const occupied = this.towers.some(
             (t) => t.col === col && t.row === row,
         );
         if (occupied) return;
 
+        // проверяем хватает ли денег
+        if (this.money < this.towerCost) return;
+
+        this.money -= this.towerCost;
         this.towers.push(new Tower(col, row, this.map.cellSize));
     }
 
@@ -65,6 +72,11 @@ export class Game {
     }
 
     update() {
+        if (this.lives <= 0) {
+            this.isRunning = false;
+            return;
+        }
+
         if (this.waveInProgress) {
             if (this.enemiesSpawned < this.enemiesPerWave) {
                 this.spawnTimer++;
@@ -95,9 +107,50 @@ export class Game {
 
         this.towers.forEach((tower) => tower.update(this.enemies));
         this.enemies.forEach((enemy) => enemy.update());
-        this.enemies = this.enemies.filter(
-            (enemy) => !enemy.reachedEnd && !enemy.isDead,
-        );
+
+        // собираем награды за убитых врагов
+        this.enemies.forEach((enemy) => {
+            if (enemy.isDead) {
+                this.money += enemy.reward;
+                this.score += 10;
+            }
+            if (enemy.reachedEnd) {
+                this.lives--;
+            }
+        });
+
+        this.enemies = this.enemies.filter((e) => !e.isDead && !e.reachedEnd);
+    }
+
+    drawUI() {
+        // фон UI панели
+        this.ctx.fillStyle = "#16213e";
+        this.ctx.fillRect(0, 0, this.width, 40);
+
+        this.ctx.font = "18px Arial";
+        this.ctx.textAlign = "left";
+
+        // жизни
+        this.ctx.fillStyle = "#e74c3c";
+        this.ctx.fillText(`❤️ ${this.lives}`, 10, 27);
+
+        // деньги
+        this.ctx.fillStyle = "#f1c40f";
+        this.ctx.fillText(`💰 ${this.money}`, 100, 27);
+
+        // очки
+        this.ctx.fillStyle = "#2ecc71";
+        this.ctx.fillText(`⭐ ${this.score}`, 210, 27);
+
+        // волна
+        this.ctx.fillStyle = "#ffffff";
+        this.ctx.fillText(`🌊 Wave: ${this.wave}`, 320, 27);
+
+        // стоимость башни
+        this.ctx.fillStyle =
+            this.money >= this.towerCost ? "#ffffff" : "#e74c3c";
+        this.ctx.textAlign = "right";
+        this.ctx.fillText(`Tower: ${this.towerCost}💰`, this.width - 10, 27);
     }
 
     draw() {
@@ -106,10 +159,7 @@ export class Game {
         this.towers.forEach((tower) => tower.draw(this.ctx));
         this.enemies.forEach((enemy) => enemy.draw(this.ctx));
 
-        this.ctx.fillStyle = "#ffffff";
-        this.ctx.font = "20px Arial";
-        this.ctx.textAlign = "left";
-        this.ctx.fillText(`Wave: ${this.wave}`, 10, 25);
+        this.drawUI();
 
         if (!this.waveInProgress) {
             this.ctx.fillStyle = "#f1c40f";
@@ -119,6 +169,22 @@ export class Game {
                 `Wave ${this.wave + 1} incoming...`,
                 this.width / 2,
                 this.height / 2,
+            );
+        }
+
+        if (this.lives <= 0) {
+            this.ctx.fillStyle = "#00000099";
+            this.ctx.fillRect(0, 0, this.width, this.height);
+            this.ctx.fillStyle = "#e74c3c";
+            this.ctx.font = "48px Arial";
+            this.ctx.textAlign = "center";
+            this.ctx.fillText("GAME OVER", this.width / 2, this.height / 2);
+            this.ctx.fillStyle = "#ffffff";
+            this.ctx.font = "24px Arial";
+            this.ctx.fillText(
+                `Score: ${this.score}`,
+                this.width / 2,
+                this.height / 2 + 50,
             );
         }
     }
