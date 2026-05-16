@@ -46,6 +46,12 @@ export class Game {
         const x = e.clientX - rect.left;
         const y = e.clientY - rect.top;
 
+        // рестарт если Game Over
+        if (this.lives <= 0) {
+            this.restart();
+            return;
+        }
+
         // кнопки выбора башни (внизу экрана)
         if (y > this.height - 50) {
             if (x < 150) this.selectedTower = "basic";
@@ -74,6 +80,23 @@ export class Game {
         this.towers.push(
             new Tower(col, row, this.map.cellSize, this.selectedTower),
         );
+    }
+
+    restart() {
+        this.enemies = [];
+        this.towers = [];
+        this.lives = 20;
+        this.money = 100;
+        this.score = 0;
+        this.selectedTower = "basic";
+        this.wave = 1;
+        this.enemiesPerWave = 5;
+        this.enemiesSpawned = 0;
+        this.spawnTimer = 0;
+        this.waveInProgress = true;
+        this.betweenWaveTimer = 0;
+        this.isRunning = true;
+        this.loop();
     }
 
     start() {
@@ -205,16 +228,42 @@ export class Game {
         if (this.lives <= 0) {
             this.ctx.fillStyle = "#00000099";
             this.ctx.fillRect(0, 0, this.width, this.height);
+
             this.ctx.fillStyle = "#e74c3c";
             this.ctx.font = "48px Arial";
             this.ctx.textAlign = "center";
-            this.ctx.fillText("GAME OVER", this.width / 2, this.height / 2);
+            this.ctx.fillText(
+                "GAME OVER",
+                this.width / 2,
+                this.height / 2 - 40,
+            );
+
             this.ctx.fillStyle = "#ffffff";
             this.ctx.font = "24px Arial";
             this.ctx.fillText(
                 `Score: ${this.score}`,
                 this.width / 2,
-                this.height / 2 + 50,
+                this.height / 2 + 10,
+            );
+
+            // кнопка рестарта
+            this.ctx.fillStyle = "#27ae60";
+            this.ctx.beginPath();
+            this.ctx.roundRect(
+                this.width / 2 - 80,
+                this.height / 2 + 40,
+                160,
+                45,
+                8,
+            );
+            this.ctx.fill();
+
+            this.ctx.fillStyle = "#ffffff";
+            this.ctx.font = "20px Arial";
+            this.ctx.fillText(
+                "🔄 Play Again",
+                this.width / 2,
+                this.height / 2 + 68,
             );
         }
     }
